@@ -8,7 +8,18 @@ if (process.env.BOT_TOKEN === undefined) {
   throw new Error("BOT_TOKEN is not defined");
 }
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+const { PORT, HOST } = process.env;
+
+const bot = new TelegramBot(process.env.BOT_TOKEN, {
+  polling: !PORT || !HOST,
+  webHook: {
+    port: Number(PORT),
+  },
+});
+
+if (PORT && HOST) {
+  bot.setWebHook(`${HOST}/bot${process.env.BOT_TOKEN}`);
+}
 
 bot.setMyCommands([
   { command: "/help", description: "Help" },
