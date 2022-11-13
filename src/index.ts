@@ -12,7 +12,7 @@ const { PORT, HOST } = process.env;
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, {
   polling: !PORT || !HOST,
-  webHook: PORT ? { port: Number(PORT) } : undefined,
+  webHook: PORT && HOST ? { port: Number(PORT) } : undefined,
 });
 
 if (PORT && HOST) {
