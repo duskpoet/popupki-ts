@@ -1,0 +1,29 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Popupka {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  chatId String
+  Check  Check?
+
+  @@index([chatId])
+}
+
+model Check {
+  id        Int     @id @default(autoincrement())
+  popupkaId Int     @unique
+  popupka   Popupka @relation(fields: [popupkaId], references: [id])
+
+  @@index([popupkaId])
+}
