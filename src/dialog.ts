@@ -132,11 +132,13 @@ export const goDialog = async (
 ) => {
   const message = await chIn.shift();
   switch (message.text) {
-    case "/popupki": {
+    case "/popupki":
+    case "/popupki@popupki_bot": {
       await processPopupki(chatId, chIn, chOut);
       return;
     }
-    case "/help": {
+    case "/help":
+    case "/help@popupki_bot": {
       await chOut.push({ text: HELP_MESSAGE });
       return;
     }
