@@ -136,6 +136,9 @@ export const goDialog = async (
       await processPopupki(chatId, chIn, chOut);
       return;
     }
+    case "/help": {
+      await chOut.push({ text: HELP_MESSAGE });
+      return;
+    }
   }
-  await chOut.push({ text: HELP_MESSAGE });
 };
