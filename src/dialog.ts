@@ -46,7 +46,7 @@ const processPopupki = async (
                 callback_data: `p:${popupka.id}`,
               },
               {
-                text: '✏️"',
+                text: "🖉",
                 callback_data: `r:${popupka.id}`,
               },
               {
