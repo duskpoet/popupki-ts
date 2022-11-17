@@ -40,19 +40,23 @@ const processPopupki = async (
       options: {
         reply_markup: {
           inline_keyboard: [
-            ...popupki.map((popupka) => [
-              {
-                text: `${popupka.Check ? "✅" : " "} ${popupka.name}`,
-                callback_data: `p:${popupka.id}`,
-              },
-              {
-                text: "✏️",
-                callback_data: `r:${popupka.id}`,
-              },
-              {
-                text: "🗑",
-                callback_data: `d:${popupka.id}`,
-              },
+            ...popupki.flatMap((popupka) => [
+              [
+                {
+                  text: `${popupka.Check ? "✅" : " "} ${popupka.name}`,
+                  callback_data: `p:${popupka.id}`,
+                },
+              ],
+              [
+                {
+                  text: "✏️",
+                  callback_data: `r:${popupka.id}`,
+                },
+                {
+                  text: "🗑",
+                  callback_data: `d:${popupka.id}`,
+                },
+              ],
             ]),
             [
               {
