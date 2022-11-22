@@ -23,7 +23,7 @@ model Popupka {
 model Check {
   id        Int     @id @default(autoincrement())
   popupkaId Int     @unique
-  popupka   Popupka @relation(fields: [popupkaId], references: [id])
+  popupka   Popupka @relation(fields: [popupkaId], references: [id], onDelete: Cascade)
 
   @@index([popupkaId])
 }
