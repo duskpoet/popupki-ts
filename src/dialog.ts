@@ -159,6 +159,8 @@ const processPopupki = async (
   }
 };
 
+export type ExtendedMessage = Message | CallbackQuery;
+
 export const goDialog = async (
   chatId: ChatId,
   chIn: ReadWriteChannel<Message>,
@@ -178,3 +180,9 @@ export const goDialog = async (
     }
   }
 };
+
+export class BreakError extends Error {
+  constructor(public data: ExtendedMessage) {
+    super("Break");
+  }
+}

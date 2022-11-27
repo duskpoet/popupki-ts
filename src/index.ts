@@ -2,7 +2,13 @@ import "dotenv/config";
 import Channel from "@nodeguy/channel";
 
 import * as TelegramBot from "node-telegram-bot-api";
-import { Dialog, goDialog, SendMessagePayload } from "./dialog";
+import {
+  BreakError,
+  Dialog,
+  ExtendedMessage,
+  goDialog,
+  SendMessagePayload,
+} from "./dialog";
 
 if (process.env.BOT_TOKEN === undefined) {
   throw new Error("BOT_TOKEN is not defined");
@@ -26,6 +32,18 @@ bot.setMyCommands([
 
 const dialogs = new Map<number, Dialog>();
 
+const globalQueue = new Channel<ExtendedMessage>();
+
+bot.on("message", (message) => {
+  console.log("message", message);
+  globalQueue.push(message);
+});
+
+bot.on("callback_query", (query) => {
+  console.log("callback_query", query);
+  globalQueue.push(query);
+});
+
 const newDialog = (chatId: number): Dialog => {
   const inChannel = new Channel<TelegramBot.Message>();
   const outChannel = new Channel<SendMessagePayload>();
@@ -40,39 +58,40 @@ const newDialog = (chatId: number): Dialog => {
     }
   })();
   (async () => {
-    await goDialog(chatId, inChannel, outChannel);
-    inChannel.close();
-    outChannel.close();
-    dialogs.delete(chatId);
+    try {
+      await goDialog(chatId, inChannel, outChannel);
+    } catch (e) {
+      if (e instanceof BreakError) {
+        globalQueue.push(e.data);
+      }
+    } finally {
+      inChannel.close();
+      outChannel.close();
+      dialogs.delete(chatId);
+    }
   })();
 
   return { in: inChannel, out: outChannel };
 };
 
-bot.on("message", (message) => {
-  try {
-    console.log("Got message", message);
-    const chatId = message.chat.id;
-    const dialog = dialogs.get(chatId) || newDialog(chatId);
-    dialog.in.push(message);
-  } catch (e) {
-    console.error(e);
-  }
-});
+(async () => {
+  while (true) {
+    try {
+      const message = await globalQueue.shift();
+      if (message === undefined) {
+        return;
+      }
+      let chatId = 0;
+      if ("message" in message && message.message) {
+        chatId = message.message.chat.id;
+      } else if ("chat" in message && message.chat) {
+        chatId = message.chat.id;
+      }
 
-bot.on("callback_query", (query) => {
-  try {
-    console.log("Got callback", query);
-    const chatId = query.message?.chat.id;
-    if (!chatId) {
-      return;
+      const dialog = dialogs.get(chatId) || newDialog(chatId);
+      dialog.in.push(message);
+    } catch (e) {
+      console.error(e);
     }
-    const dialog = dialogs.get(chatId);
-    if (!dialog) {
-      return;
-    }
-    dialog.in.push(query);
-  } catch (e) {
-    console.error(e);
   }
-});
+})();
