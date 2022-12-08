@@ -64,6 +64,10 @@ const processPopupki = async (
                 callback_data: "add",
               },
               {
+                text: "List",
+                callback_data: "list",
+              },
+              {
                 text: "Back",
                 callback_data: "back",
               },
@@ -96,6 +100,12 @@ const processPopupki = async (
       if (data === "back") {
         await outChannel.push({
           text: "Main menu",
+        });
+        break;
+      }
+      if (data === "list") {
+        await outChannel.push({
+          text: popupki.map((p) => p.name).join("\n"),
         });
         break;
       }
