@@ -1,6 +1,8 @@
 import "dotenv/config";
 import Channel from "@nodeguy/channel";
 
+console.log("Starting popupki app");
+
 import * as TelegramBot from "node-telegram-bot-api";
 import {
   BreakError,
