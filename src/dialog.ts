@@ -60,17 +60,18 @@ const processPopupki = async (
             ]),
             [
               {
-                text: "Add",
+                text: "➕",
                 callback_data: "add",
               },
               {
-                text: "List",
+                text: "📃",
                 callback_data: "list",
               },
               {
-                text: "Back",
+                text: "🔙",
                 callback_data: "back",
               },
+              { text: "🗑️", callback_data: "clear" },
             ],
           ],
         },
@@ -108,6 +109,15 @@ const processPopupki = async (
           text: popupki.map((p) => p.name).join("\n"),
         });
         break;
+      }
+      if (data === "clear") {
+        await prisma.popupka.deleteMany({
+          where: {
+            Check: {
+              isNot: null,
+            },
+          },
+        });
       }
       if (data && data.startsWith("p:")) {
         const id = data.split(":").slice(1).join(":");
