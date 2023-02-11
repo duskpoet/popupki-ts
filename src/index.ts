@@ -30,6 +30,7 @@ if (PORT && HOST) {
 bot.setMyCommands([
   { command: "/help", description: "Help" },
   { command: "/popupki", description: "Popupki" },
+  { command: "/clear", description: "Clear" },
 ]);
 
 const dialogs = new Map<number, Dialog>();

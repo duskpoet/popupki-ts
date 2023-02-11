@@ -179,6 +179,41 @@ const processPopupki = async (
   }
 };
 
+const processClear = async (
+  chatId: ChatId,
+  inChannel: ReadWriteChannel<Message | CallbackQuery>,
+  outChannel: ReadWriteChannel<SendMessagePayload>
+) => {
+  await outChannel.push({
+    text: "Are you sure?",
+    options: {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Yes",
+              callback_data: "yes",
+            },
+            {
+              text: "No",
+              callback_data: "no",
+            },
+          ],
+        ],
+      },
+    },
+  });
+  const pick = await inChannel.shift();
+  if ("data" in pick) {
+    if (pick.data === "yes") {
+      await prisma.popupka.deleteMany({});
+      await outChannel.push({
+        text: "Cleared",
+      });
+    }
+  }
+};
+
 export type ExtendedMessage = Message | CallbackQuery;
 
 export const goDialog = async (
@@ -193,6 +228,12 @@ export const goDialog = async (
       await processPopupki(chatId, chIn, chOut);
       return;
     }
+    case "/clear":
+    case "/clear@popupki_bot": {
+      await processClear(chatId, chIn, chOut);
+      return;
+    }
+
     case "/help":
     case "/help@popupki_bot": {
       await chOut.push({ text: HELP_MESSAGE });
