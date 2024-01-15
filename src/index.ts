@@ -66,6 +66,8 @@ const newDialog = (chatId: number): Dialog => {
     } catch (e) {
       if (e instanceof BreakError) {
         globalQueue.push(e.data);
+      } else {
+        console.error(e);
       }
     } finally {
       inChannel.close();
@@ -98,3 +100,13 @@ const newDialog = (chatId: number): Dialog => {
     }
   }
 })();
+
+process.setUncaughtExceptionCaptureCallback((err) => {
+  console.error(err);
+});
+process.on("unhandledRejection", (err) => {
+  console.error(err);
+});
+process.on("SIGINT", () => {
+  process.exit(0);
+});
