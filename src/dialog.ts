@@ -47,16 +47,6 @@ const processPopupki = async (
                   callback_data: `p:${popupka.id}`,
                 },
               ],
-              [
-                {
-                  text: "✏️",
-                  callback_data: `r:${popupka.id}`,
-                },
-                {
-                  text: "🗑",
-                  callback_data: `d:${popupka.id}`,
-                },
-              ],
             ]),
             [
               {
@@ -135,41 +125,6 @@ const processPopupki = async (
                 popupkaId: p.id,
               },
             });
-          }
-        }
-      }
-      if (data && data.startsWith("d:")) {
-        const id = data.split(":").slice(1).join(":");
-        const p = popupki.find((popupka) => popupka.id === +id);
-        if (p) {
-          await prisma.popupka.delete({
-            where: {
-              id: p.id,
-            },
-          });
-        }
-      }
-      if (data && data.startsWith("r:")) {
-        const id = data.split(":").slice(1).join(":");
-        const p = popupki.find((popupka) => popupka.id === +id);
-        if (p) {
-          await outChannel.push({
-            text: "Enter new name",
-          });
-          const good = await inChannel.shift();
-          if ("text" in good && good.text) {
-            try {
-              await prisma.popupka.update({
-                where: {
-                  id: p.id,
-                },
-                data: {
-                  name: good.text,
-                },
-              });
-            } catch (e) {
-              console.log(e);
-            }
           }
         }
       }

@@ -38,12 +38,10 @@ const dialogs = new Map<number, Dialog>();
 const globalQueue = new Channel<ExtendedMessage>();
 
 bot.on("message", (message) => {
-  console.log("message", message);
   globalQueue.push(message);
 });
 
 bot.on("callback_query", (query) => {
-  console.log("callback_query", query);
   globalQueue.push(query);
 });
 
