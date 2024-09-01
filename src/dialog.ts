@@ -24,7 +24,7 @@ const HELP_MESSAGE = `
 const processPopupki = async (
   chatId: ChatId,
   inChannel: ReadWriteChannel<Message | CallbackQuery>,
-  outChannel: ReadWriteChannel<SendMessagePayload>
+  outChannel: ReadWriteChannel<SendMessagePayload>,
 ) => {
   while (true) {
     const popupki = await prisma.popupka.findMany({
@@ -72,16 +72,17 @@ const processPopupki = async (
       const data = pick.data;
       if (data === "add") {
         await outChannel.push({
-          text: "Enter good name",
+          text: "Enter good(s) name",
         });
         const good = await inChannel.shift();
         if ("text" in good && good.text) {
           try {
-            await prisma.popupka.create({
-              data: {
-                name: good.text,
+            const goods = good.text.split("\n");
+            await prisma.popupka.createMany({
+              data: goods.map((gName) => ({
+                name: gName,
                 chatId: String(chatId),
-              },
+              })),
             });
           } catch (e) {
             console.log(e);
@@ -135,9 +136,9 @@ const processPopupki = async (
 };
 
 const processClear = async (
-  chatId: ChatId,
+  _chatId: ChatId,
   inChannel: ReadWriteChannel<Message | CallbackQuery>,
-  outChannel: ReadWriteChannel<SendMessagePayload>
+  outChannel: ReadWriteChannel<SendMessagePayload>,
 ) => {
   await outChannel.push({
     text: "Are you sure?",
@@ -174,7 +175,7 @@ export type ExtendedMessage = Message | CallbackQuery;
 export const goDialog = async (
   chatId: ChatId,
   chIn: ReadWriteChannel<Message>,
-  chOut: ReadWriteChannel<SendMessagePayload>
+  chOut: ReadWriteChannel<SendMessagePayload>,
 ) => {
   const message = await chIn.shift();
   switch (message.text) {
