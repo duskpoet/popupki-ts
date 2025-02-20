@@ -83,6 +83,7 @@ const processPopupki = async (
                 name: gName,
                 chatId: String(chatId),
               })),
+              skipDuplicates: true,
             });
           } catch (e) {
             console.log(e);
