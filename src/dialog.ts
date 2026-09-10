@@ -1,18 +1,19 @@
 import { ReadWriteChannel } from "@nodeguy/channel";
-import {
-  ChatId,
-  SendMessageOptions,
-  Message,
+import type {
   CallbackQuery,
+  Message,
+  SendMessageParams,
 } from "node-telegram-bot-api";
 import { prisma } from "./db";
 
+export type ExtendedMessage = Message | CallbackQuery;
+
 export type SendMessagePayload = {
   text: string;
-  options?: SendMessageOptions;
+  options?: Omit<SendMessageParams, "chat_id" | "text">;
 };
 export type Dialog = {
-  in: ReadWriteChannel<Message | CallbackQuery>;
+  in: ReadWriteChannel<ExtendedMessage>;
   out: ReadWriteChannel<SendMessagePayload>;
 };
 
@@ -22,8 +23,8 @@ const HELP_MESSAGE = `
 `;
 
 const processPopupki = async (
-  chatId: ChatId,
-  inChannel: ReadWriteChannel<Message | CallbackQuery>,
+  chatId: number,
+  inChannel: ReadWriteChannel<ExtendedMessage>,
   outChannel: ReadWriteChannel<SendMessagePayload>,
 ) => {
   while (true) {
@@ -40,13 +41,11 @@ const processPopupki = async (
       options: {
         reply_markup: {
           inline_keyboard: [
-            ...popupki.flatMap((popupka) => [
-              [
-                {
-                  text: `${popupka.Check ? "✅" : " "} ${popupka.name}`,
-                  callback_data: `p:${popupka.id}`,
-                },
-              ],
+            ...popupki.map((popupka) => [
+              {
+                text: `${popupka.Check ? "✅" : " "} ${popupka.name}`,
+                callback_data: `p:${popupka.id}`,
+              },
             ]),
             [
               {
@@ -68,6 +67,9 @@ const processPopupki = async (
       },
     });
     const pick = await inChannel.shift();
+    if (pick === undefined) {
+      break;
+    }
     if ("data" in pick) {
       const data = pick.data;
       if (data === "add") {
@@ -75,7 +77,7 @@ const processPopupki = async (
           text: "Enter good(s) name",
         });
         const good = await inChannel.shift();
-        if ("text" in good && good.text) {
+        if (good !== undefined && "text" in good && good.text) {
           try {
             const goods = good.text.split("\n");
             await prisma.popupka.createMany({
@@ -137,8 +139,8 @@ const processPopupki = async (
 };
 
 const processClear = async (
-  _chatId: ChatId,
-  inChannel: ReadWriteChannel<Message | CallbackQuery>,
+  _chatId: number,
+  inChannel: ReadWriteChannel<ExtendedMessage>,
   outChannel: ReadWriteChannel<SendMessagePayload>,
 ) => {
   await outChannel.push({
@@ -161,7 +163,7 @@ const processClear = async (
     },
   });
   const pick = await inChannel.shift();
-  if ("data" in pick) {
+  if (pick !== undefined && "data" in pick) {
     if (pick.data === "yes") {
       await prisma.popupka.deleteMany({});
       await outChannel.push({
@@ -171,28 +173,33 @@ const processClear = async (
   }
 };
 
-export type ExtendedMessage = Message | CallbackQuery;
+/** Strip a `@botname` suffix so `/popupki@popupki_bot` matches `/popupki`. */
+const commandOf = (message: ExtendedMessage): string | undefined => {
+  if (!("text" in message) || !message.text) {
+    return undefined;
+  }
+  return message.text.trim().split(/\s+/)[0]?.split("@")[0];
+};
 
 export const goDialog = async (
-  chatId: ChatId,
-  chIn: ReadWriteChannel<Message>,
+  chatId: number,
+  chIn: ReadWriteChannel<ExtendedMessage>,
   chOut: ReadWriteChannel<SendMessagePayload>,
 ) => {
   const message = await chIn.shift();
-  switch (message.text) {
-    case "/popupki":
-    case "/popupki@popupki_bot": {
+  if (message === undefined) {
+    return;
+  }
+  switch (commandOf(message)) {
+    case "/popupki": {
       await processPopupki(chatId, chIn, chOut);
       return;
     }
-    case "/clear":
-    case "/clear@popupki_bot": {
+    case "/clear": {
       await processClear(chatId, chIn, chOut);
       return;
     }
-
-    case "/help":
-    case "/help@popupki_bot": {
+    case "/help": {
       await chOut.push({ text: HELP_MESSAGE });
       return;
     }
