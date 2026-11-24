@@ -1,0 +1,14 @@
+{
+  // Type-checks the Neon side (neon.ts, functions/), which is bundled by
+  // `neon deploy` rather than compiled by tsc into dist/.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["neon.ts", "functions/**/*", "scripts/**/*"]
+}
